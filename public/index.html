@@ -1,0 +1,258 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Allowance Budget Planner</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f3f5f9;
+            color: #202938;
+            padding: 30px 16px;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: auto;
+        }
+
+        header {
+            margin-bottom: 25px;
+        }
+
+        header h1 {
+            font-size: 30px;
+            color: #2457c5;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: #687386;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .card h2 {
+            font-size: 19px;
+            margin-bottom: 18px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d7dce5;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #2457c5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background: #19449f;
+        }
+
+        .results {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .result-box {
+            background: #f1f5ff;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .result-box p {
+            color: #687386;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .result-box h3 {
+            color: #2457c5;
+            font-size: 24px;
+        }
+
+        #message {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #c0392b;
+        }
+
+        footer {
+            text-align: center;
+            color: #8992a2;
+            font-size: 13px;
+            margin-top: 25px;
+        }
+
+        @media (max-width: 550px) {
+            .form-grid, .results {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <header>
+            <h1>Allowance Budget Planner</h1>
+            <p>Manage your allowance, track your expenses, and plan your daily budget.</p>
+        </header>
+
+        <section class="card">
+            <h2>Enter Your Budget</h2>
+
+            <form id="budgetForm">
+                <div class="form-grid">
+                    <div>
+                        <label for="allowance">Total Allowance (₱)</label>
+                        <input type="number" id="allowance" min="0" step="0.01" placeholder="Example: 3000" required>
+                    </div>
+
+                    <div>
+                        <label for="expenses">Total Expenses (₱)</label>
+                        <input type="number" id="expenses" min="0" step="0.01" placeholder="Example: 1200" required>
+                    </div>
+
+                    <div>
+                        <label for="remainingDays">Remaining Days</label>
+                        <input type="number" id="remainingDays" min="1" step="1" placeholder="Example: 15" required>
+                    </div>
+                </div>
+
+                <button type="submit">Calculate My Budget</button>
+                <p id="message" role="alert"></p>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>Budget Summary</h2>
+
+            <div class="results">
+                <div class="result-box">
+                    <p>Total Allowance</p>
+                    <h3 id="totalAllowance">₱0.00</h3>
+                </div>
+
+                <div class="result-box">
+                    <p>Total Expenses</p>
+                    <h3 id="totalExpenses">₱0.00</h3>
+                </div>
+
+                <div class="result-box">
+                    <p>Remaining Balance</p>
+                    <h3 id="remainingBalance">₱0.00</h3>
+                </div>
+
+                <div class="result-box">
+                    <p>Daily Spending Budget</p>
+                    <h3 id="dailyBudget">₱0.00</h3>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            Allowance Budget Planner | Version 1.0.0
+        </footer>
+    </main>
+
+    <script>
+        const form = document.getElementById("budgetForm");
+        const message = document.getElementById("message");
+
+        function formatPeso(amount) {
+            return "₱" + Number(amount).toLocaleString("en-PH", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        form.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            message.textContent = "";
+
+            const allowance = Number(document.getElementById("allowance").value);
+            const expenses = Number(document.getElementById("expenses").value);
+            const remainingDays = Number(document.getElementById("remainingDays").value);
+
+            try {
+                const response = await fetch("/api/calculate", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        allowance,
+                        expenses,
+                        remainingDays
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "Calculation failed.");
+                }
+
+                document.getElementById("totalAllowance").textContent =
+                    formatPeso(data.allowance);
+
+                document.getElementById("totalExpenses").textContent =
+                    formatPeso(data.expenses);
+
+                document.getElementById("remainingBalance").textContent =
+                    formatPeso(data.remainingBalance);
+
+                document.getElementById("dailyBudget").textContent =
+                    formatPeso(data.dailyBudget);
+
+            } catch (error) {
+                message.textContent = error.message;
+            }
+        });
+    </script>
+</body>
+</html>
